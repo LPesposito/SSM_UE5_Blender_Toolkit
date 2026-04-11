@@ -1,0 +1,17 @@
+# Blender backup files
+*.blend[0-9]
+*.blend@
+
+# Python bytecode and cache
+**/__pycache__/
+*.py[cod]
+
+# Project Specific
+Context.txt
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Exported textures folder
+textures/
