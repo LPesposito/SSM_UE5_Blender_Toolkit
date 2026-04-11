@@ -22,6 +22,8 @@ During the port of a legacy project from **Blender Game Engine** to **UE5**, we 
 * **Naming Pattern:** 
   * Materials: `M_[ObjectName]`
   * Textures: `T_[MaterialName]_[MapType]`
+ 
+![Image](https://github.com/user-attachments/assets/ed900495-0a77-4345-b63c-7ccd3fa44466)
 
 ### 3. Texture Management
 * **Internal Rename:** Cleans up the `.blend` data block names.
