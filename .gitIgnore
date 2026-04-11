@@ -5,7 +5,6 @@
 # Python bytecode and cache
 **/__pycache__/
 *.py[cod]
-*$py.class
 
 # Project Specific
 Context.txt
@@ -13,7 +12,6 @@ Context.txt
 # OS specific
 .DS_Store
 Thumbs.db
-Context.txt
 
-# Exported textures (prevents bloating the repo with binary textures)
+# Exported textures folder
 textures/

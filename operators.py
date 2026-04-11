@@ -119,9 +119,9 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
         selected_objs = context.selected_objects
         if not selected_objs: return {'CANCELLED'}
 
-        original_energies = {}
+        # Armazena energias originais para restaurar depois
+        original_energies = {l: l.energy for l in bpy.data.lights}
         for l in bpy.data.lights:
-            original_energies[l] = l.energy
             l.energy *= p.light_intensity
 
         export_dir = os.path.dirname(self.filepath)
