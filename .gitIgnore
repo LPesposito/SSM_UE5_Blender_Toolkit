@@ -12,7 +12,6 @@ Context.txt
 # OS specific
 .DS_Store
 Thumbs.db
-Context.txt
 
 # Exported textures folder
 textures/
