@@ -1,46 +1,12 @@
-bl_info = {
-    "name": "UE5 Workflow Toolkit",
-    "author": "Lp Moonkey Dev",
-    "version": (1, 2),
-    "blender": (3, 0, 0),
-    "location": "View3D > Sidebar > UE5 Export",
-    "description": "Smart export and organization for Unreal Engine 5",
-    "category": "Import-Export",
-}
-
 import bpy
 import os
 import re
 import mathutils
+from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
-from bpy.props import StringProperty, FloatProperty, BoolProperty, EnumProperty, PointerProperty
-from bpy.types import Operator, Panel, PropertyGroup
+from bpy.props import StringProperty
+from .utils import find_image_node
 
-# --- PROPERTIES ---
-class UE5_Toolkit_Data(PropertyGroup):
-    light_intensity: FloatProperty(name="Light Intensity", description="Multiplies light energy for UE5 (typical: 100-600)", default=100.0, min=0.0)
-    apply_transforms: BoolProperty(name="Apply Transforms", description="Apply rotation/scale before export", default=True)
-    export_individual: BoolProperty(name="Export Individual", description="Exports each object as a separate FBX", default=False)
-    pivot_pos: EnumProperty(
-        name="Pivot Position",
-        items=[('NONE', "Keep Original", ""), ('CENTER', "Center", ""), ('BOTTOM', "Bottom", ""), 
-               ('LEFT', "Left", ""), ('RIGHT', "Right", ""), ('FRONT', "Front", ""), ('BACK', "Back", "")],
-        default='NONE'
-    )
-
-# --- UTILS ---
-def find_image_node(input_pin):
-    if not input_pin or not input_pin.is_linked: return None
-    link = input_pin.links[0]
-    node = link.from_node
-    if node.type == 'TEX_IMAGE': return node
-    for inp in node.inputs:
-        if inp.is_linked:
-            res = find_image_node(inp)
-            if res: return res
-    return None
-
-# --- OPERATORS ---
 class UE5_OT_ToggleBackface(Operator):
     """Toggle Backface Culling to find inverted faces"""
     bl_idname = "ue5.toggle_backface"
@@ -81,6 +47,22 @@ class UE5_OT_PrepareGeometry(Operator):
                 elif mode in ['LEFT', 'RIGHT']: obj.location.x -= offset.x
                 elif mode in ['FRONT', 'BACK']: obj.location.y -= offset.y
                 obj.data.transform(mathutils.Matrix.Translation(offset))
+        return {'FINISHED'}
+
+class UE5_OT_CreateCollision(Operator):
+    """Create UCX collision mesh for selected objects"""
+    bl_idname = "ue5.create_collision"
+    bl_label = "Create UCX Collision"
+    bl_options = {'REGISTER', 'UNDO'}
+    def execute(self, context):
+        selected = [o for o in context.selected_objects if o.type == 'MESH']
+        for obj in selected:
+            new_data = obj.data.copy()
+            clean_name = re.sub(r'\.\d{3}$', '', obj.name)
+            new_obj = bpy.data.objects.new(name=f"UCX_{clean_name}", object_data=new_data)
+            context.collection.objects.link(new_obj)
+            new_obj.matrix_world = obj.matrix_world
+            new_obj.data.materials.clear()
         return {'FINISHED'}
 
 class UE5_OT_RenameInternal(Operator):
@@ -134,36 +116,35 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
     filename_ext = ".fbx"
     def execute(self, context):
         p = context.scene.ue5_data
+        selected_objs = context.selected_objects
+        if not selected_objs: return {'CANCELLED'}
+
         for l in bpy.data.lights:
             if "op" not in l: l["op"] = l.energy
             l.energy = l["op"] * p.light_intensity
-        bpy.ops.export_scene.fbx(filepath=self.filepath, use_selection=True, global_scale=1.0, 
-            apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
-            bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
-            embed_textures=True, mesh_smooth_type='FACE')
+
+        export_dir = os.path.dirname(self.filepath)
+        if p.export_individual:
+            for obj in selected_objs:
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select_set(True)
+                obj_path = os.path.join(export_dir, f"{obj.name}.fbx")
+                bpy.ops.export_scene.fbx(filepath=obj_path, use_selection=True, global_scale=1.0, 
+                    apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
+                    bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
+                    embed_textures=True, mesh_smooth_type='FACE')
+            for obj in selected_objs: obj.select_set(True)
+        else:
+            bpy.ops.export_scene.fbx(filepath=self.filepath, use_selection=True, global_scale=1.0, 
+                apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
+                bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
+                embed_textures=True, mesh_smooth_type='FACE')
         return {'FINISHED'}
 
-# --- UI ---
-class VIEW3D_PT_UE5_Toolkit(Panel):
-    bl_label = "UE5 Workflow Toolkit"
-    bl_idname = "VIEW3D_PT_ue5_toolkit"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'UE5 Export'
-    def draw(self, context):
-        layout = self.layout
-        p = context.scene.ue5_data
-        box = layout.box(); box.label(text="1. Visualization", icon='RESTRICT_VIEW_OFF'); box.operator("ue5.toggle_backface", icon='NORMALS_FACE')
-        box = layout.box(); box.label(text="2. Geometry Setup", icon='MESH_DATA'); box.prop(p, "pivot_pos", text=""); box.operator("ue5.prepare_geometry", icon='OBJECT_ORIGIN')
-        box = layout.box(); box.label(text="3. Materials & Textures", icon='MATERIAL'); box.operator("ue5.rename_internal", icon='EVENT_M'); box.operator("ue5.save_textures", icon='FOLDER_REDIRECT')
-        box = layout.box(); box.label(text="4. Export", icon='EXPORT'); box.prop(p, "light_intensity"); box.prop(p, "apply_transforms"); box.prop(p, "export_individual"); box.separator(); box.operator("ue5.export_fbx", icon='FILE_BACKUP')
+classes = (UE5_OT_ToggleBackface, UE5_OT_PrepareGeometry, UE5_OT_CreateCollision, UE5_OT_RenameInternal, UE5_OT_SaveTextures, UE5_OT_ExportFBX)
 
-# --- REGISTRY ---
-classes = (UE5_Toolkit_Data, UE5_OT_ToggleBackface, UE5_OT_PrepareGeometry, UE5_OT_RenameInternal, UE5_OT_SaveTextures, UE5_OT_ExportFBX, VIEW3D_PT_UE5_Toolkit)
 def register():
     for cls in classes: bpy.utils.register_class(cls)
-    bpy.types.Scene.ue5_data = PointerProperty(type=UE5_Toolkit_Data)
+
 def unregister():
     for cls in reversed(classes): bpy.utils.unregister_class(cls)
-    if hasattr(bpy.types.Scene, "ue5_data"): del bpy.types.Scene.ue5_data
-if __name__ == "__main__": register()
