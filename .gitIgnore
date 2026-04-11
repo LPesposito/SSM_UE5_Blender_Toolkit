@@ -1,1 +1,19 @@
-# Este arquivo deve ser excluído em favor do .gitignore (minúsculo)
+# Blender backup files
+*.blend[0-9]
+*.blend@
+
+# Python bytecode and cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Project Specific
+Context.txt
+
+# OS specific
+.DS_Store
+Thumbs.db
+Context.txt
+
+# Exported textures (prevents bloating the repo with binary textures)
+textures/
