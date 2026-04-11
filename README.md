@@ -1,3 +1,6 @@
+![Pivot and transform demo](https://github.com/user-attachments/assets/049a9115-4abc-42c6-996c-8eb300936d8d)
+![Pivot and transform demo](https://github.com/user-attachments/assets/fd9a4a71-de07-4247-9fcd-c95fd84ea786)
+
 # UE5 Workflow Toolkit for Blender
 
 A tool built to automate the migration and export process from Blender to Unreal Engine 5. It handles naming conventions, texture management, and coordinate system alignment.
@@ -16,6 +19,8 @@ During the port of a legacy project from **Blender Game Engine** to **UE5**, we 
 ### 1. Pivot & Geometry
 * **Advanced Pivot Snapping:** Set origin to Bottom (Floor), Center, Left, Right, Front, or Back based on world bounds.
 * **Batch Transform:** Applies Scale and Rotation while preserving smooth shading settings.
+
+![Image](https://github.com/user-attachments/assets/aed3a03b-8e96-4ad8-a1d0-de0d7899c678)
 
 ### 2. Smart Material Logic
 * **Connection-Based Renaming:** Instead of reading node labels, the script analyzes the **Principled BSDF** inputs. It identifies maps connected to *Base Color*, *Metallic*, *Roughness*, and *Normal* sockets.
