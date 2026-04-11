@@ -1,0 +1,13 @@
+📄 Contexto de Manutenção: UE5 Workflow Toolkit
+Descrição do Projeto:
+Este é um Addon para Blender (Python) desenvolvido para otimizar o pipeline de exportação de assets para a Unreal Engine 5. Ele foi criado originalmente para resolver problemas de migração de projetos legados da Blender Game Engine (BGE).
+Principais Funcionalidades:
+Visualização: Toggle de Backface Culling para identificar faces invertidas.
+Geometria: Aplicação de Transforms (Scale/Rotation) e ajuste de Pivot Point em 6 direções (Bottom, Center, Left, Right, Front, Back) usando cálculos de matriz (mathutils).
+Materiais: Renomeação automática de materiais (M_) e texturas (T_) baseada na análise de conexões do nó Principled BSDF (rastreia Base Color, Metallic, Roughness e Normal).
+Exportação: Exportação FBX com multiplicador de intensidade de luz (conversão Blender -> UE5) e suporte para exportação de objetos individuais em massa.
+Arquitetura do Código:
+Estrutura baseada em bpy.types.Operator, bpy.types.Panel e bpy.types.PropertyGroup.
+Uso de PointerProperty para armazenar configurações na cena.
+Lógica de Undo (UNDO flag) habilitada em todos os operadores.
+Sistema de busca recursiva de nós de imagem (find_image_node) para ignorar nós intermediários (Normal Maps, Ramps, etc.).

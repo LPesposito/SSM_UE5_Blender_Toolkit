@@ -119,9 +119,10 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
         selected_objs = context.selected_objects
         if not selected_objs: return {'CANCELLED'}
 
+        original_energies = {}
         for l in bpy.data.lights:
-            if "op" not in l: l["op"] = l.energy
-            l.energy = l["op"] * p.light_intensity
+            original_energies[l] = l.energy
+            l.energy *= p.light_intensity
 
         export_dir = os.path.dirname(self.filepath)
         if p.export_individual:
@@ -139,6 +140,11 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
                 apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
                 bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
                 embed_textures=True, mesh_smooth_type='FACE')
+        
+        # Restaura as energias originais após o export
+        for l, energy in original_energies.items():
+            l.energy = energy
+            
         return {'FINISHED'}
 
 classes = (UE5_OT_ToggleBackface, UE5_OT_PrepareGeometry, UE5_OT_CreateCollision, UE5_OT_RenameInternal, UE5_OT_SaveTextures, UE5_OT_ExportFBX)
