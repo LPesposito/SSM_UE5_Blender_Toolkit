@@ -57,4 +57,4 @@ Developed to solve critical pipeline friction when moving assets to **UE5**, spe
 ---
 
 ## Credits
-Developed with ❤️ by **Lp Moonkey Dev**.
+Developed by **Lp Moonkey Dev**.
