@@ -2,13 +2,16 @@ schema_version = "1.0.0"
 id = "scene_staticmesh_ue5_toolkit"
 version = "1.0.0"
 name = "Scene StaticMesh - UE5 Workflow Toolkit"
-tagline = "Professional pipeline toolkit to automate material naming, smart collisions (UCX/UBX), and batch export for Unreal Engine 5."
+tagline = "Professional pipeline toolkit to automate material naming, smart collisions (UCX/UBX), and batch export for Unreal Engine 5"
 maintainer = "Lp Moonkey Dev <lpmoonkeydev@gmail.com>"
 type = "add-on"
-tags = ["Import-Export", "Game Development", "Unreal Engine"]
+license = ["GPL-2.0-or-later"]
+blender_version_min = "3.0.0"
+tags = ["Import-Export", "Mesh"]
 
 [website]
-repository = "https://github.com/LpMoonkeyDev/SceneStaticMesh_UE5_Toolkit"
+homepage = "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit"
+repository = "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit"
 
 [permissions]
-files = "Required for exporting FBX files and saving textures to disk."
+files = "Required for exporting FBX files and saving textures to disk"
