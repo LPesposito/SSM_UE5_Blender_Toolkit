@@ -19,10 +19,10 @@ if "bpy" in locals():
     importlib.reload(operators)
     importlib.reload(ui)
 else:
-    from .scene_staticmesh_ue5_toolkit import operators
+    from . import operators
 
 import bpy
-from .scene_staticmesh_ue5_toolkit import properties, ui, utils
+from . import properties, ui, utils
 
 def register():
     properties.register()

@@ -34,7 +34,17 @@ def pack_addon():
         print(f"ERRO: Pasta do addon '{addon_folder}' não encontrada em {root_dir}")
         return
 
+    # Arquivos extras na raiz do dev que devem ir para a raiz do ZIP
+    extra_files = ["README.md", "README.pt-br.md"]
+
     with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Adiciona READMEs
+        for ef in extra_files:
+            ef_path = os.path.join(root_dir, ef)
+            if os.path.exists(ef_path):
+                zipf.write(ef_path, ef)
+                print(f"  [+] {ef}")
+
         for root, dirs, files in os.walk(source_path):
             # Remove pastas de cache da lista para não entrar no loop
             if "__pycache__" in dirs:
