@@ -1,6 +1,6 @@
-schema_version = "1.0.0"
+schema_version = "1.3.0"
 id = "scene_staticmesh_ue5_toolkit"
-version = "1.0.0"
+version = "1.3.0"
 name = "Scene StaticMesh - UE5 Workflow Toolkit"
 tagline = "Smart collisions, naming, and batch export for Unreal Engine 5"
 maintainer = "Lp Moonkey Dev <lpmoonkeydev@gmail.com>"
