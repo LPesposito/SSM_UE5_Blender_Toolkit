@@ -5,13 +5,11 @@ name = "Scene StaticMesh - UE5 Workflow Toolkit"
 tagline = "Smart collisions, naming, and batch export for Unreal Engine 5"
 maintainer = "Lp Moonkey Dev <lpmoonkeydev@gmail.com>"
 type = "add-on"
-license = ["GPL-3.0-or-later"]
+license = ["SPDX:GPL-3.0-or-later"]
 blender_version_min = "4.2.0"
 tags = ["Import-Export", "Mesh"]
 
-[website]
-homepage = "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit"
-repository = "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit"
+website = "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit"
 
 [permissions]
 files = "Required for exporting FBX files and saving textures to disk"
