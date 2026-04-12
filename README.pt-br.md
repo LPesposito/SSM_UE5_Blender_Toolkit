@@ -37,7 +37,7 @@ Este toolkit foi desenvolvido para eliminar os gargalos técnicos comuns ao move
 
 ## Instalação
 
-1. Baixe este repositório como um arquivo **ZIP**.
+1. Baixe a [ultima versão aqui](https://github.com/LPesposito/SSM_UE5_Blender_Toolkit/releases)
 2. No Blender, vá em: **Edit > Preferences > Add-ons > Install**.
 3. Selecione o arquivo ZIP e ative o addon **Import-Export: SSM - UE5 Workflow Toolkit**.
 4. O painel aparecerá na **Sidebar (N)** na aba **UE5 Export**.
