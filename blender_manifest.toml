@@ -1,0 +1,14 @@
+schema_version = "1.0.0"
+id = "scene_staticmesh_ue5_toolkit"
+version = "1.0.0"
+name = "Scene StaticMesh - UE5 Workflow Toolkit"
+tagline = "Professional pipeline toolkit to automate material naming, smart collisions (UCX/UBX), and batch export for Unreal Engine 5."
+maintainer = "Lp Moonkey Dev <lpmoonkeydev@gmail.com>"
+type = "add-on"
+tags = ["Import-Export", "Game Development", "Unreal Engine"]
+
+[website]
+repository = "https://github.com/LpMoonkeyDev/SceneStaticMesh_UE5_Toolkit"
+
+[permissions]
+files = "Required for exporting FBX files and saving textures to disk."
