@@ -3,6 +3,7 @@ def find_image_node(input_pin):
     link = input_pin.links[0]
     node = link.from_node
     if node.type == 'TEX_IMAGE': return node
+    # Busca recursiva para ignorar nós utilitários (Math, Invert, Mix, etc)
     for inp in node.inputs:
         if inp.is_linked:
             res = find_image_node(inp)

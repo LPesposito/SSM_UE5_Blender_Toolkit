@@ -156,7 +156,15 @@ class UE5_OT_RenameInternal(Operator):
     bl_label = "Rename Internally"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        map_slots = {'Base Color': 'Color', 'Metallic': 'Metallic', 'Roughness': 'Roughness', 'Normal': 'Normal'}
+        # Mapeamento com prioridade: Base Color por último para garantir que
+        # se a imagem for compartilhada com Alpha, o sufixo final seja 'Color'.
+        map_slots = [
+            ('Alpha', 'A'),
+            ('Metallic', 'Metallic'),
+            ('Roughness', 'Roughness'),
+            ('Normal', 'Normal'),
+            ('Base Color', 'Color')
+        ]
         processed_materials = set()
 
         for obj in context.selected_objects:
@@ -183,7 +191,7 @@ class UE5_OT_RenameInternal(Operator):
                 bsdf = next((n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
                 if bsdf:
                     tex_prefix = mat.name[2:] if mat.name.startswith("M_") else mat.name
-                    for pin, suffix in map_slots.items():
+                    for pin, suffix in map_slots:
                         node = find_image_node(bsdf.inputs.get(pin))
                         if node and node.image: 
                             node.image.name = f"T_{tex_prefix}_{suffix}"
@@ -200,16 +208,31 @@ class UE5_OT_SaveTextures(Operator):
     def execute(self, context):
         path = os.path.join(self.directory, "textures")
         if not os.path.exists(path): os.makedirs(path)
+        
+        # Backup das configurações de render para restaurar após o processo
+        render_settings = context.scene.render.image_settings
+        old_format = render_settings.file_format
+        old_color_mode = render_settings.color_mode
+
         for obj in context.selected_objects:
             for slot in obj.material_slots:
                 if slot.material and slot.material.use_nodes:
                     for n in slot.material.node_tree.nodes:
                         if n.type == 'TEX_IMAGE' and n.image:
+                            img = n.image
                             try:
-                                f = os.path.join(path, n.image.name + ".png")
-                                n.image.save_render(f)
-                                n.image.filepath = f
+                                f = os.path.join(path, img.name + ".png")
+                                # Configura formato para PNG e preserva Alpha se a imagem possuir
+                                render_settings.file_format = 'PNG'
+                                render_settings.color_mode = 'RGBA' if (img.channels == 4 or img.use_alpha) else 'RGB'
+                                
+                                img.save_render(f)
+                                img.filepath = f
                             except: pass
+        
+        # Restaura as configurações originais do usuário
+        render_settings.file_format = old_format
+        render_settings.color_mode = old_color_mode
         return {'FINISHED'}
 
 class UE5_OT_ExportFBX(Operator, ExportHelper):
