@@ -7,9 +7,7 @@
 *.py[cod]
 
 # Project Specific
-Context.txt
-readme2.md
-
+/Context.md
 # OS specific
 .DS_Store
 Thumbs.db
