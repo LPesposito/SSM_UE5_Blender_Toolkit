@@ -12,6 +12,11 @@ class UE5_Toolkit_Data(PropertyGroup):
                ('LEFT', "Left", ""), ('RIGHT', "Right", ""), ('FRONT', "Front", ""), ('BACK', "Back", "")],
         default='NONE'
     )
+    collision_method: EnumProperty(
+        name="Collision Method",
+        items=[('BOX', "Simple Box (UBX)", ""), ('COMPOUND', "Compound Box (UBX Multi)", ""), ('SMART_CONVEX', "Smart Convex (UCX)", "")],
+        default='SMART_CONVEX'
+    )
 
 def register():
     bpy.utils.register_class(UE5_Toolkit_Data)

@@ -18,6 +18,7 @@ class VIEW3D_PT_UE5_Toolkit(Panel):
         box.label(text="2. Geometry Setup", icon='MESH_DATA')
         box.prop(p, "pivot_pos", text="")
         box.operator("ue5.prepare_geometry", icon='OBJECT_ORIGIN')
+        box.prop(p, "collision_method", text="")
         box.operator("ue5.create_collision", icon='PHYSICS')
         
         box = layout.box(); box.label(text="3. Materials & Textures", icon='MATERIAL'); box.operator("ue5.rename_internal", icon='EVENT_M'); box.operator("ue5.save_textures", icon='FOLDER_REDIRECT')

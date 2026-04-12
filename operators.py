@@ -63,6 +63,7 @@ class UE5_OT_CreateCollision(Operator):
     def execute(self, context):
         selected_meshes = [o for o in context.selected_objects if o.type == 'MESH']
         original_active = context.view_layer.objects.active
+        method = context.scene.ue5_data.collision_method
 
         # Garantir a existência da coleção "Collisions"
         col_name = "Collisions"
@@ -72,40 +73,55 @@ class UE5_OT_CreateCollision(Operator):
             context.scene.collection.children.link(collision_col)
 
         for obj in selected_meshes:
-            # 1. Definir o objeto atual como ativo
-            context.view_layer.objects.active = obj
-            
-            # 2. Criar duplicata e formatar nome (Substitui '.' por '_' para compatibilidade UE5)
             clean_name = obj.name.replace(".", "_")
-            collision_obj = obj.copy()
-            collision_obj.data = obj.data.copy()
-            collision_obj.name = f"UCX_{clean_name}"
-            collision_col.objects.link(collision_obj)
-            
-            # 3. Limpeza de Materiais
-            collision_obj.data.materials.clear()
-            
-            # 4. Lógica de Colisão Simplificada (Convex Hull + Decimate)
-            # Deselecionar tudo para focar apenas na colisão
-            bpy.ops.object.select_all(action='DESELECT')
-            collision_obj.select_set(True)
-            context.view_layer.objects.active = collision_obj
-            
-            # Gera a forma convexa via bmesh (mais estável e evita erros de contexto)
-            bm = bmesh.new()
-            bm.from_mesh(collision_obj.data)
-            bmesh.ops.convex_hull(bm, input=bm.verts)
-            bm.to_mesh(collision_obj.data)
-            bm.free()
-            collision_obj.data.update()
-            
-            # Simplifica a geometria pela metade
-            decimate = collision_obj.modifiers.new(name="UCX_Simplify", type='DECIMATE')
-            decimate.ratio = 0.5
-            bpy.ops.object.modifier_apply(modifier=decimate.name)
-            
-            # 5. Parentesco e Inversão de Matriz
-            setup_ue5_parenting(collision_obj, obj)
+
+            if method == 'SMART_CONVEX':
+                # --- UCX Logic ---
+                new_obj = obj.copy()
+                new_obj.data = obj.data.copy()
+                new_obj.name = f"UCX_{clean_name}"
+                collision_col.objects.link(new_obj)
+                new_obj.data.materials.clear()
+
+                bm = bmesh.new()
+                bm.from_mesh(new_obj.data)
+                bmesh.ops.convex_hull(bm, input=bm.verts)
+                bm.to_mesh(new_obj.data)
+                bm.free()
+                new_obj.data.update()
+
+                decimate = new_obj.modifiers.new(name="UCX_Simplify", type='DECIMATE')
+                decimate.ratio = 0.5
+                context.view_layer.objects.active = new_obj
+                bpy.ops.object.modifier_apply(modifier=decimate.name)
+                setup_ue5_parenting(new_obj, obj)
+
+            elif method == 'BOX':
+                # --- UBX Logic (Single) ---
+                new_obj = self.create_ubx_from_bounds(obj, f"UBX_{clean_name}", collision_col)
+                setup_ue5_parenting(new_obj, obj)
+
+            elif method == 'COMPOUND':
+                # --- UBX Logic (Multi/Loose Parts) ---
+                tmp_copy = obj.copy()
+                tmp_copy.data = obj.data.copy()
+                context.scene.collection.objects.link(tmp_copy)
+                
+                bpy.ops.object.select_all(action='DESELECT')
+                tmp_copy.select_set(True)
+                context.view_layer.objects.active = tmp_copy
+                
+                # Separa em partes soltas
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.separate(type='LOOSE')
+                bpy.ops.object.mode_set(mode='OBJECT')
+                
+                parts = context.selected_objects
+                for i, part in enumerate(parts):
+                    ubx_name = f"UBX_{clean_name}_{i:02d}"
+                    ubx_obj = self.create_ubx_from_bounds(part, ubx_name, collision_col)
+                    setup_ue5_parenting(ubx_obj, obj)
+                    bpy.data.objects.remove(part, do_unlink=True)
 
         # 6. Limpeza final da seleção (restaurar originais)
         bpy.ops.object.select_all(action='DESELECT')
@@ -114,6 +130,25 @@ class UE5_OT_CreateCollision(Operator):
         context.view_layer.objects.active = original_active
 
         return {'FINISHED'}
+
+    def create_ubx_from_bounds(self, source_obj, name, collection):
+        """Gera uma malha de cubo baseada na bounding box do objeto"""
+        mesh = bpy.data.meshes.new(name)
+        new_obj = bpy.data.objects.new(name, mesh)
+        collection.objects.link(new_obj)
+        
+        bm = bmesh.new()
+        # Cria vértices nos 8 cantos da bounding box local
+        for corner in source_obj.bound_box:
+            bm.verts.new(corner)
+        bm.verts.ensure_lookup_table()
+        bmesh.ops.convex_hull(bm, input=bm.verts)
+        bm.to_mesh(mesh)
+        bm.free()
+        
+        new_obj.matrix_world = source_obj.matrix_world
+        new_obj.data.materials.clear()
+        return new_obj
 
 class UE5_OT_RenameInternal(Operator):
     """Rename Materials and Images internally based on connections"""
@@ -238,7 +273,7 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
                     # 5. Restaurar posição original
                     obj.location = original_loc
             
-            self.report({'INFO'}, f"Sucesso: {export_count} arquivos FBX individuais gerados.")
+            self.report({'INFO'}, "Success: %d individual FBX files generated." % export_count)
         else:
             # Exportação de Grupo (Cena Completa)
             bpy.ops.export_scene.fbx(
@@ -254,7 +289,7 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
                 embed_textures=True,
                 mesh_smooth_type='FACE'
             )
-            self.report({'INFO'}, "Exportação de grupo concluída.")
+            self.report({'INFO'}, "Group export finished.")
         
         # Restaura as energias originais após o export
         for l, energy in original_energies.items():

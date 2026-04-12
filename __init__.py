@@ -1,7 +1,7 @@
 bl_info = {
-    "name": "Scene StaticMesh - UE5 Workflow Toolkit",
+    "name": "SSM - UE5 Workflow Toolkit",
     "author": "Lp Moonkey Dev",
-    "version": (1, 3),
+    "version": (1, 3, 5),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > UE5 Export",
     "description": "Smart export and organization for Unreal Engine 5",
@@ -24,8 +24,10 @@ def register():
     properties.register()
     operators.register()
     ui.register()
+    bpy.app.translations.register(__name__, utils.translations_dict)
 
 def unregister():
+    bpy.app.translations.unregister(__name__)
     ui.unregister()
     operators.unregister()
     properties.unregister()

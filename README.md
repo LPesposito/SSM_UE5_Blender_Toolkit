@@ -1,60 +1,58 @@
+[Read this in Portuguese (Brasil)](README.pt-br.md)
 
+# Scene StaticMesh - UE5 Workflow Toolkit
 
-# UE5 Workflow Toolkit for Blender
+A professional Blender addon designed to automate the organization and export of complex scenes or individual Static Meshes to Unreal Engine 5. It ensures industry-standard naming conventions, optimized collisions, and perfect coordinate alignment.
 
-A tool built to automate the migration and export process from Blender to Unreal Engine 5. It handles naming conventions, texture management, and coordinate system alignment.
-
-### Context
-During the port of a legacy project from **Blender Game Engine** to **UE5**, we faced constant issues with:
-* Disorganized texture naming (e.g., `color.002.png`).
-* Missing textures on FBX export.
-* Incorrect light scales (Blender vs Unreal physical units).
-* Pivot points and transforms mismatch.
+### Why this tool?
+Developed to solve critical pipeline friction when moving assets to **UE5**, specifically addressing:
+* **Pivot Mismatch:** Automatic centering to world origin during export.
+* **Collision Management:** Automated UCX/UBX generation with geometric simplification.
+* **Material Complexity:** Smart renaming for objects with multiple material slots.
+* **Coordinate Systems:** Fixed -Z Forward / Y Up orientation.
+* **Physical Units:** Light energy conversion between Blender and Unreal.
 
 ---
 
 ## Features
 
-### 1. Pivot & Geometry
-* **Advanced Pivot Snapping:** Set origin to Bottom (Floor), Center, Left, Right, Front, or Back based on world bounds.
-* **Batch Transform:** Applies Scale and Rotation while preserving smooth shading settings.
+### 1. Geometry & Precision Pivot
+* **Advanced Pivot Snapping:** Set origin to Bottom (Floor), Center, Left, Right, Front, or Back.
+* **Origin-Zero Export:** In Individual Mode, the tool temporarily moves each asset to (0,0,0) during export, ensuring the UE5 pivot matches your Blender setup exactly.
 
-![Pivot and transform demo](https://github.com/user-attachments/assets/fd9a4a71-de07-4247-9fcd-c95fd84ea786)
+### 2. Automated Collisions (UCX/UBX)
+* **Smart Convex (UCX):** Generates simplified convex hulls (50% decimation) for performance.
+* **Box (UBX):** Creates perfect box collisions based on object bounds.
+* **Compound Box:** Automatically separates loose parts and generates individual UBX boxes for complex shapes.
 
-### 2. Smart Material Logic
-* **Connection-Based Renaming:** Instead of reading node labels, the script analyzes the **Principled BSDF** inputs. It identifies maps connected to *Base Color*, *Metallic*, *Roughness*, and *Normal* sockets.
-* **Naming Pattern:** 
-  * Materials: `M_[ObjectName]`
-  * Textures: `T_[MaterialName]_[MapType]`
- 
-![Image](https://github.com/user-attachments/assets/ed900495-0a77-4345-b63c-7ccd3fa44466)
-
-### 3. Texture Management
-* **Internal Rename:** Cleans up the `.blend` data block names.
-* **Physical Export:** Saves connected textures into a `/textures` subfolder at a chosen path, relinking them automatically.
+### 3. Advanced Material & Texture Naming
+* **Multi-Material Support:** Handles objects with multiple slots using the `M_[ObjectName]_[MaterialName]` pattern.
+* **Duplicate Prevention:** Tracks processed materials to avoid redundant renaming.
+* **Texture Pattern:** `T_[MaterialName]_[Suffix]` (e.g., `T_Wall_Brick_Normal`).
 
 ### 4. UE5 Optimized Export
-* **Light Multiplier:** Converts Blender light energy to Unreal's intensity.
-* **Individual Export:** Each selected mesh is exported as its own FBX file named after the object.
+* **Axis Correction:** Native -Z Forward and Y Up export settings.
+* **Individual Batch Export:** Exports every selected mesh as a unique FBX, automatically including its collision children.
 
 ---
 
 ## Installation
 
-1. Download `ue5_toolkit.py`.
-2. Blender > Preferences > Add-ons > Install.
-3. Activate **Export: UE5 Workflow Toolkit**.
-4. Find the panel in the **3D Viewport Sidebar (N)** under the **UE5 Export** tab.
+1. Download the repository as a ZIP.
+2. In Blender: **Edit > Preferences > Add-ons > Install**.
+3. Select the ZIP file and activate **Import-Export: SSM - UE5 Workflow Toolkit**.
+4. Access the tool in the **Sidebar (N)** under the **UE5 Export** tab.
 
 ---
 
 ## Usage
-1. **Setup:** Select meshes and set the desired pivot (e.g., *Bottom* for props). Click **Fix Transforms & Pivot**.
-2. **Materials:** Use **Rename Internally** to standardize your data.
-3. **Textures:** Use **Save Textures to Disk** to organize your external files.
-4. **Final Export:** Adjust **Light Intensity** (default 100x) and click **Export FBX**.
+
+1. **Visualization:** Toggle Backface Culling to catch flipped normals before they reach Unreal.
+2. **Geometry:** Set your pivot, fix transforms, and choose your collision method (UCX/UBX).
+3. **Materials & Textures:** Standardize names and export textures to a dedicated folder.
+4. **Export:** Set light intensity multiplier and choose between Group or Individual export.
 
 ---
 
-## License
-MIT
+## Credits
+Developed with ❤️ by **Lp Moonkey Dev**.
