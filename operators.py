@@ -5,7 +5,12 @@ import mathutils
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty
-from .utils import find_image_node
+from .utils import find_image_node, setup_ue5_parenting
+
+@classmethod
+def poll(cls, context):
+    return context.active_object is not None and context.active_object.type == 'MESH' and len(context.selected_objects) >= 1
+
 
 class UE5_OT_ToggleBackface(Operator):
     """Toggle Backface Culling to find inverted faces"""
@@ -55,14 +60,46 @@ class UE5_OT_CreateCollision(Operator):
     bl_label = "Create UCX Collision"
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
-        selected = [o for o in context.selected_objects if o.type == 'MESH']
-        for obj in selected:
-            new_data = obj.data.copy()
-            clean_name = re.sub(r'\.\d{3}$', '', obj.name)
-            new_obj = bpy.data.objects.new(name=f"UCX_{clean_name}", object_data=new_data)
-            context.collection.objects.link(new_obj)
-            new_obj.matrix_world = obj.matrix_world
-            new_obj.data.materials.clear()
+        selected_meshes = [o for o in context.selected_objects if o.type == 'MESH']
+        original_active = context.view_layer.objects.active
+
+        for obj in selected_meshes:
+            # 1. Definir o objeto atual como ativo
+            context.view_layer.objects.active = obj
+            
+            # 2. Criar duplicata e formatar nome (Substitui '.' por '_' para compatibilidade UE5)
+            clean_name = obj.name.replace(".", "_")
+            collision_obj = obj.copy()
+            collision_obj.data = obj.data.copy()
+            collision_obj.name = f"UCX_{clean_name}"
+            context.collection.objects.link(collision_obj)
+            
+            # 3. Limpeza de Materiais
+            collision_obj.data.materials.clear()
+            
+            # 4. Lógica de Colisão Simplificada (Convex Hull + Decimate)
+            # Deselecionar tudo para focar apenas na colisão
+            bpy.ops.object.select_all(action='DESELECT')
+            collision_obj.select_set(True)
+            context.view_layer.objects.active = collision_obj
+            
+            # Gera a forma convexa
+            bpy.ops.object.convex_hull()
+            
+            # Simplifica a geometria pela metade
+            decimate = collision_obj.modifiers.new(name="UCX_Simplify", type='DECIMATE')
+            decimate.ratio = 0.5
+            bpy.ops.object.modifier_apply(modifier=decimate.name)
+            
+            # 5. Parentesco e Inversão de Matriz
+            setup_ue5_parenting(collision_obj, obj)
+
+        # 6. Limpeza final da seleção (restaurar originais)
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in selected_meshes:
+            obj.select_set(True)
+        context.view_layer.objects.active = original_active
+
         return {'FINISHED'}
 
 class UE5_OT_RenameInternal(Operator):
@@ -127,8 +164,12 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
         export_dir = os.path.dirname(self.filepath)
         if p.export_individual:
             for obj in selected_objs:
+                if obj.type != 'MESH': continue # Filtra apenas malhas para export individual
+                
                 bpy.ops.object.select_all(action='DESELECT')
                 obj.select_set(True)
+                context.view_layer.objects.active = obj # Define o objeto como ativo para garantir o contexto
+                
                 obj_path = os.path.join(export_dir, f"{obj.name}.fbx")
                 bpy.ops.export_scene.fbx(filepath=obj_path, use_selection=True, global_scale=1.0, 
                     apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
