@@ -15,17 +15,19 @@ Este toolkit foi desenvolvido para eliminar os gargalos técnicos comuns ao move
 * **Snap de Pivô Avançado:** Define a origem para a Base (Piso), Centro, Esquerda, Direita, Frente ou Trás.
 * **Exportação na Origem Zero:** No modo Individual, o script move temporariamente cada objeto para (0,0,0) durante a exportação, garantindo que o pivô na Unreal coincida exatamente com a sua configuração no Blender.
 * **Fix Transforms:** Aplica escala e rotação mantendo a integridade geométrica.
-
+![Image](https://github.com/user-attachments/assets/069e3e57-355c-4521-ab27-ad2faf1ce7bb)
 ### 2. Colisões Automatizadas (UCX/UBX)
 * **Smart Convex (UCX):** Gera invólucros convexos simplificados (redução de 50% nos polígonos) para otimização de performance.
 * **Simple Box (UBX):** Cria colisores de caixa perfeitos baseados no Bounding Box do objeto.
 * **Compound Box (Multi):** Separa malhas complexas em partes soltas e gera caixas UBX individuais para cada parte, tudo parentado automaticamente.
+![Image](https://github.com/user-attachments/assets/ae0980e5-4400-4a9b-9b93-178b18515e27)
+![Image](https://github.com/user-attachments/assets/d73122b7-a880-401a-91eb-01dd93fc834b)
 
 ### 3. Materiais e Nomenclatura de Texturas
 * **Suporte Multi-Material:** Gerencia objetos com múltiplos slots seguindo o padrão `M_[NomeObjeto]_[NomeMaterial]`.
 * **Prevenção de Duplicatas:** Rastreia materiais já processados para evitar renomeações redundantes ou conflitos de dados.
 * **Padronização de Texturas:** Analisa os nós do Principled BSDF e renomeia imagens para `T_[NomeMaterial]_[Sufixo]` (ex: `T_Parede_Tijolo_Normal`).
-
+![Image](https://github.com/user-attachments/assets/26754d0f-8442-42c5-a54c-af5d91b80606)
 ### 4. Exportação Otimizada para UE5
 * **Correção de Eixos:** Configurações nativas de exportação com -Z Forward e Y Up.
 * **Exportação em Lote Individual:** Exporta cada malha selecionada como um arquivo FBX único, incluindo automaticamente seus respectivos objetos de colisão.
