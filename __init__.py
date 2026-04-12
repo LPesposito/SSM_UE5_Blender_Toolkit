@@ -1,7 +1,7 @@
 bl_info = {
     "name": "SSM - UE5 Workflow Toolkit",
     "author": "Lp Moonkey Dev",
-    "version": (1, 3, 5),
+    "version": (2, 0, 0),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > UE5 Export",
     "description": "Smart export and organization for Unreal Engine 5",
