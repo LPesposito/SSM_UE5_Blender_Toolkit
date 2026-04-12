@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import os
 import re
 import mathutils
@@ -7,16 +8,16 @@ from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty
 from .utils import find_image_node, setup_ue5_parenting
 
-@classmethod
-def poll(cls, context):
-    return context.active_object is not None and context.active_object.type == 'MESH' and len(context.selected_objects) >= 1
-
-
 class UE5_OT_ToggleBackface(Operator):
     """Toggle Backface Culling to find inverted faces"""
     bl_idname = "ue5.toggle_backface"
     bl_label = "Check Inverted Faces"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.active_object.type == 'MESH' and len(context.selected_objects) >= 1
+
     def execute(self, context):
         for area in context.screen.areas:
             if area.type == 'VIEW_3D':
@@ -63,6 +64,13 @@ class UE5_OT_CreateCollision(Operator):
         selected_meshes = [o for o in context.selected_objects if o.type == 'MESH']
         original_active = context.view_layer.objects.active
 
+        # Garantir a existência da coleção "Collisions"
+        col_name = "Collisions"
+        collision_col = bpy.data.collections.get(col_name)
+        if not collision_col:
+            collision_col = bpy.data.collections.new(col_name)
+            context.scene.collection.children.link(collision_col)
+
         for obj in selected_meshes:
             # 1. Definir o objeto atual como ativo
             context.view_layer.objects.active = obj
@@ -72,7 +80,7 @@ class UE5_OT_CreateCollision(Operator):
             collision_obj = obj.copy()
             collision_obj.data = obj.data.copy()
             collision_obj.name = f"UCX_{clean_name}"
-            context.collection.objects.link(collision_obj)
+            collision_col.objects.link(collision_obj)
             
             # 3. Limpeza de Materiais
             collision_obj.data.materials.clear()
@@ -83,8 +91,13 @@ class UE5_OT_CreateCollision(Operator):
             collision_obj.select_set(True)
             context.view_layer.objects.active = collision_obj
             
-            # Gera a forma convexa
-            bpy.ops.object.convex_hull()
+            # Gera a forma convexa via bmesh (mais estável e evita erros de contexto)
+            bm = bmesh.new()
+            bm.from_mesh(collision_obj.data)
+            bmesh.ops.convex_hull(bm, input=bm.verts)
+            bm.to_mesh(collision_obj.data)
+            bm.free()
+            collision_obj.data.update()
             
             # Simplifica a geometria pela metade
             decimate = collision_obj.modifiers.new(name="UCX_Simplify", type='DECIMATE')
