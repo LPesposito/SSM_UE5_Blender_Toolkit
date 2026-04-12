@@ -2,11 +2,11 @@ schema_version = "1.0.0"
 id = "scene_staticmesh_ue5_toolkit"
 version = "1.0.0"
 name = "Scene StaticMesh - UE5 Workflow Toolkit"
-tagline = "Professional pipeline toolkit to automate material naming, smart collisions (UCX/UBX), and batch export for Unreal Engine 5"
+tagline = "Smart collisions, naming, and batch export for Unreal Engine 5"
 maintainer = "Lp Moonkey Dev <lpmoonkeydev@gmail.com>"
 type = "add-on"
-license = ["GPL-2.0-or-later"]
-blender_version_min = "3.0.0"
+license = ["GPL-3.0-or-later"]
+blender_version_min = "4.2.0"
 tags = ["Import-Export", "Mesh"]
 
 [website]

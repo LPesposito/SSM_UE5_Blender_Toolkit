@@ -2,11 +2,13 @@ bl_info = {
     "name": "SSM - UE5 Workflow Toolkit",
     "author": "Lp Moonkey Dev",
     "version": (1, 0, 0),
-    "blender": (3, 0, 0),
+    "blender": (4, 2, 0),
     "location": "View3D > Sidebar > UE5 Export",
     "description": "Smart export and organization for Unreal Engine 5",
     "warning": "",
+    "doc_url": "https://github.com/LPesposito/SSM_UE5_Blender_Toolkit",
     "category": "Import-Export",
+    "license": "GPL-3.0-or-later",
 }
 
 # Suporte a recarregamento de scripts (Reload Scripts)

@@ -8,6 +8,8 @@
 
 # Project Specific
 /Context.md
+
+*.zip
 # OS specific
 .DS_Store
 Thumbs.db
