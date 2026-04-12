@@ -40,7 +40,7 @@ Developed to solve critical pipeline friction when moving assets to **UE5**, spe
 
 ## Installation
 
-1. Download the repository as a ZIP.
+1. Download here: https://github.com/LPesposito/SSM_UE5_Blender_Toolkit/releases
 2. In Blender: **Edit > Preferences > Add-ons > Install**.
 3. Select the ZIP file and activate **Import-Export: SSM - UE5 Workflow Toolkit**.
 4. Access the tool in the **Sidebar (N)** under the **UE5 Export** tab.
