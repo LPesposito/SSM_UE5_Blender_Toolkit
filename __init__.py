@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "UE5 Workflow Toolkit",
+    "name": "Scene StaticMesh - UE5 Workflow Toolkit",
     "author": "Lp Moonkey Dev",
     "version": (1, 3),
     "blender": (3, 0, 0),

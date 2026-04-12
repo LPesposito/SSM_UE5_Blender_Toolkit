@@ -122,18 +122,36 @@ class UE5_OT_RenameInternal(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     def execute(self, context):
         map_slots = {'Base Color': 'Color', 'Metallic': 'Metallic', 'Roughness': 'Roughness', 'Normal': 'Normal'}
+        processed_materials = set()
+
         for obj in context.selected_objects:
             if obj.type != 'MESH': continue
-            c_name = re.sub(r'\.\d{3}$', '', obj.name)
+            c_obj_name = re.sub(r'\.\d{3}$', '', obj.name)
+
             for slot in obj.material_slots:
                 mat = slot.material
-                if not mat or not mat.use_nodes: continue
-                mat.name = f"M_{c_name}"
+                if not mat or mat in processed_materials: continue
+
+                # Limpa o nome base do material (remove .001 e prefixos M_ existentes)
+                m_base = re.sub(r'\.\d{3}$', '', mat.name)
+                if m_base.startswith("M_"): m_base = m_base[2:]
+                
+                # Evita redundância caso o nome do objeto já esteja no nome do material
+                if m_base.startswith(c_obj_name):
+                    mat.name = f"M_{m_base}"
+                else:
+                    mat.name = f"M_{c_obj_name}_{m_base}"
+                
+                processed_materials.add(mat)
+                if not mat.use_nodes: continue
+
                 bsdf = next((n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
                 if bsdf:
+                    tex_prefix = mat.name[2:] if mat.name.startswith("M_") else mat.name
                     for pin, suffix in map_slots.items():
                         node = find_image_node(bsdf.inputs.get(pin))
-                        if node and node.image: node.image.name = f"T_{mat.name}_{suffix}"
+                        if node and node.image: 
+                            node.image.name = f"T_{tex_prefix}_{suffix}"
         return {'FINISHED'}
 
 class UE5_OT_SaveTextures(Operator):
@@ -175,25 +193,68 @@ class UE5_OT_ExportFBX(Operator, ExportHelper):
             l.energy *= p.light_intensity
 
         export_dir = os.path.dirname(self.filepath)
+        export_count = 0
+
         if p.export_individual:
             for obj in selected_objs:
-                if obj.type != 'MESH': continue # Filtra apenas malhas para export individual
+                if obj.type != 'MESH': continue
+                
+                # 1. Salvar estado original
+                original_loc = obj.location.copy()
                 
                 bpy.ops.object.select_all(action='DESELECT')
                 obj.select_set(True)
-                context.view_layer.objects.active = obj # Define o objeto como ativo para garantir o contexto
+                context.view_layer.objects.active = obj
+
+                # Selecionar filhos (Colisões) para exportarem junto
+                for child in obj.children:
+                    if child.name.startswith(("UCX_", "UBX_", "USP_", "UCP_")):
+                        child.select_set(True)
                 
-                obj_path = os.path.join(export_dir, f"{obj.name}.fbx")
-                bpy.ops.export_scene.fbx(filepath=obj_path, use_selection=True, global_scale=1.0, 
-                    apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
-                    bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
-                    embed_textures=True, mesh_smooth_type='FACE')
-            for obj in selected_objs: obj.select_set(True)
+                try:
+                    # 2. Mover temporariamente para (0,0,0)
+                    obj.location = (0, 0, 0)
+                    
+                    # 3. Aplicar transformações (Rotação e Escala)
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+                    
+                    # 4. Exportar
+                    obj_path = os.path.join(export_dir, f"{obj.name}.fbx")
+                    bpy.ops.export_scene.fbx(
+                        filepath=obj_path,
+                        use_selection=True,
+                        global_scale=1.0,
+                        apply_scale_options='FBX_SCALE_ALL',
+                        axis_forward='-Z',
+                        axis_up='Y',
+                        bake_space_transform=True,
+                        object_types={'MESH', 'LIGHT', 'EMPTY'},
+                        path_mode='COPY',
+                        embed_textures=True,
+                        mesh_smooth_type='FACE'
+                    )
+                    export_count += 1
+                finally:
+                    # 5. Restaurar posição original
+                    obj.location = original_loc
+            
+            self.report({'INFO'}, f"Sucesso: {export_count} arquivos FBX individuais gerados.")
         else:
-            bpy.ops.export_scene.fbx(filepath=self.filepath, use_selection=True, global_scale=1.0, 
-                apply_scale_options='FBX_SCALE_ALL' if p.apply_transforms else 'FBX_SCALE_NONE',
-                bake_space_transform=True, object_types={'MESH', 'LIGHT', 'EMPTY'}, path_mode='COPY', 
-                embed_textures=True, mesh_smooth_type='FACE')
+            # Exportação de Grupo (Cena Completa)
+            bpy.ops.export_scene.fbx(
+                filepath=self.filepath,
+                use_selection=True,
+                global_scale=1.0,
+                apply_scale_options='FBX_SCALE_ALL',
+                axis_forward='-Z',
+                axis_up='Y',
+                bake_space_transform=True,
+                object_types={'MESH', 'LIGHT', 'EMPTY'},
+                path_mode='COPY',
+                embed_textures=True,
+                mesh_smooth_type='FACE'
+            )
+            self.report({'INFO'}, "Exportação de grupo concluída.")
         
         # Restaura as energias originais após o export
         for l, energy in original_energies.items():
