@@ -8,7 +8,7 @@
 
 # Project Specific
 /Context.md
-
+/notes
 *.zip
 # OS specific
 .DS_Store
