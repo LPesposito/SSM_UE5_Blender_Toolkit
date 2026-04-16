@@ -1,4 +1,4 @@
-[Read this in Portuguese (Brasil)](README.pt-br.md)
+[Leia em Portugues (Brasil)](README.pt-br.md)
 
 # Scene StaticMesh - UE5 Workflow Toolkit
 
